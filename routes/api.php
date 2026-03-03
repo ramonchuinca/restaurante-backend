@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\OrderController;
 
 // 🔓 ROTAS PÚBLICAS
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 
 // 👉 MENU (listar produtos SEM login)
 Route::get('/products', [ProductController::class, 'index']);
@@ -26,7 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Categorias (admin)
+    // Categorias (admin futuramente)
     Route::apiResource('categories', CategoryController::class);
 
     // Produtos (admin)
@@ -37,8 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pedidos (usuário logado)
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
-    Route::get('/orders/{order}', [OrderController::class, 'show']);
-    Route::put('/orders/{order}', [OrderController::class, 'update']);
-    Route::put('/orders/{order}/items', [OrderController::class, 'updateItems']);
-    Route::delete('/orders/{order}', [OrderController::class, 'destroy']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::put('/orders/{id}', [OrderController::class, 'update']);
+    Route::put('/orders/{id}/items', [OrderController::class, 'updateItems']);
+    Route::delete('/orders/{id}', [OrderController::class, 'destroy']);
 });

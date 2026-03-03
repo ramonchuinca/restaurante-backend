@@ -24,76 +24,77 @@ class OrderController extends Controller
     }
 
     // 📌 Criar pedido
-   public function store(Request $request)
-{
-    $data = $request->validate([
-        'items' => 'required|array|min:1',
-        'items.*.product_id' => 'required|exists:products,id',
-        'items.*.quantity' => 'required|integer|min:1',
-        'address' => 'required|string',
-        'payment_method' => 'required|string|in:pix,card,cash',
-    ]);
-
-    return DB::transaction(function () use ($data, $request) {
-
-        $order = Order::create([
-            'user_id' => $request->user()->id,
-            'status' => 'pending',
-            'total' => 0,
-            'address' => $data['address'],
-            'payment_method' => $data['payment_method'],
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'address' => 'required|string',
+            'payment_method' => 'required|string|in:pix,card,cash',
         ]);
 
-        $total = 0;
+        return DB::transaction(function () use ($data, $request) {
 
-        foreach ($data['items'] as $item) {
-            $product = Product::findOrFail($item['product_id']);
-
-            $subtotal = $product->price * $item['quantity'];
-            $total += $subtotal;
-
-            $order->items()->create([
-                'product_id' => $product->id,
-                'quantity' => $item['quantity'],
-                'price' => $product->price,
+            $order = Order::create([
+                'user_id' => $request->user()->id,
+                'status' => 'pending',
+                'total' => 0,
+                'address' => $data['address'],
+                'payment_method' => $data['payment_method'],
             ]);
-        }
 
-        $order->update(['total' => $total]);
+            $total = 0;
 
-        return new OrderResource(
-            $order->load('items.product')
-        );
-    });
-}
+            foreach ($data['items'] as $item) {
+                $product = Product::findOrFail($item['product_id']);
+
+                $subtotal = $product->price * $item['quantity'];
+                $total += $subtotal;
+
+                $order->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $item['quantity'],
+                    'price' => $product->price,
+                ]);
+            }
+
+            $order->update(['total' => $total]);
+
+            return new OrderResource(
+                $order->load('items.product')
+            );
+        });
+    }
 
     // 📌 Mostrar pedido específico
-    public function show(Order $order)
+    public function show(Request $request, $id)
     {
-        $this->authorize('view', $order);
+        $order = Order::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->with('items.product')
+            ->firstOrFail();
 
-        return new OrderResource(
-            $order->load('items.product')
-        );
+        return new OrderResource($order);
     }
 
     // 📌 Atualizar status do pedido
-    public function update(Request $request, Order $order)
+    public function update(Request $request, $id)
     {
-        $this->authorize('update', $order);
+        $order = Order::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
 
         $validated = $request->validate([
             'status' => 'required|in:pending,processing,delivered,canceled',
         ]);
 
-        $order->update([
-            'status' => $validated['status'],
-        ]);
+        $order->update(['status' => $validated['status']]);
 
         Log::info('Pedido atualizado', [
-            'user_id'  => auth()->id(),
+            'user_id' => auth()->id(),
             'order_id' => $order->id,
-            'status'   => $order->status,
+            'status' => $order->status,
         ]);
 
         return new OrderResource(
@@ -102,9 +103,11 @@ class OrderController extends Controller
     }
 
     // 📌 Atualizar itens do pedido
-    public function updateItems(Request $request, Order $order)
+    public function updateItems(Request $request, $id)
     {
-        $this->authorize('update', $order);
+        $order = Order::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
 
         $data = $request->validate([
             'items' => 'required|array|min:1',
@@ -126,17 +129,17 @@ class OrderController extends Controller
 
                 $order->items()->create([
                     'product_id' => $product->id,
-                    'quantity'   => $item['quantity'],
-                    'price'      => $product->price,
+                    'quantity' => $item['quantity'],
+                    'price' => $product->price,
                 ]);
             }
 
             $order->update(['total' => $total]);
 
             Log::info('Itens do pedido atualizados', [
-                'user_id'  => auth()->id(),
+                'user_id' => auth()->id(),
                 'order_id' => $order->id,
-                'total'    => $total,
+                'total' => $total,
             ]);
 
             return new OrderResource(
@@ -146,14 +149,16 @@ class OrderController extends Controller
     }
 
     // 📌 Excluir pedido
-    public function destroy(Order $order)
+    public function destroy(Request $request, $id)
     {
-        $this->authorize('delete', $order);
+        $order = Order::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
 
         $order->delete();
 
         Log::info('Pedido removido', [
-            'user_id'  => auth()->id(),
+            'user_id' => auth()->id(),
             'order_id' => $order->id,
         ]);
 
