@@ -13,7 +13,7 @@ class Category extends Model
 
     protected $fillable = [
         'name',
-        'status'
+        'slung'
     ];
 
     // 🔗 Relacionamento: Categoria tem muitos produtos

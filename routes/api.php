@@ -18,6 +18,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // 👉 MENU (listar produtos SEM login)
 Route::get('/products', [ProductController::class, 'index']);
 
+Route::get('/menu', [CategoryController::class, 'menu']);
 // 🔐 ROTAS PROTEGIDAS
 Route::middleware('auth:sanctum')->group(function () {
 

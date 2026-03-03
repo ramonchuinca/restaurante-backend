@@ -73,4 +73,17 @@ class CategoryController extends Controller
     {
         return response()->json($category);
     }
+
+    public function menu()
+{
+    return Category::where('status', true)
+        ->with(['products' => function ($query) {
+            $query->where('status', true);
+        }])
+        ->orderBy('name')
+        ->get();
+}
+
+
+
 }

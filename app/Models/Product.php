@@ -16,10 +16,11 @@ class Product extends Model
     'description',
     'price',
     'status',
-    'image'
+    'image',
+    'active',
 ];
 
-    // Relacionamento
+    // Relacionamento Esse produto Pertence a uma Categoria
     public function category()
     {
         return $this->belongsTo(Category::class);
