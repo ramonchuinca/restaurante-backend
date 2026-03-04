@@ -22,12 +22,21 @@ class Handler extends ExceptionHandler
     /**
      * Register the exception handling callbacks for the application.
      */
-    public function register(): void
-    {
-        $this->reportable(function (Throwable $e) {
-            //
-        });
-    }
+   use Throwable;
+
+public function register(): void
+{
+    $this->renderable(function (Throwable $e, $request) {
+        if ($request->is('api/*')) {
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
+    });
+}
 
     /**
      * Retorno padrão para requisições não autenticadas (API)
