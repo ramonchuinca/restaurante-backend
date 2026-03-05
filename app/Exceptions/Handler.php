@@ -9,7 +9,7 @@ use Throwable;
 class Handler extends ExceptionHandler
 {
     /**
-     * The list of the inputs that are never flashed to the session on validation exceptions.
+     * Inputs que nunca serão exibidos em erros de validação
      *
      * @var array<int, string>
      */
@@ -20,23 +20,21 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * Register the exception handling callbacks for the application.
+     * Registro de handlers de exceção
      */
-   use Throwable;
-
-public function register(): void
-{
-    $this->renderable(function (Throwable $e, $request) {
-        if ($request->is('api/*')) {
-            return response()->json([
-                'error' => true,
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ], 500);
-        }
-    });
-}
+    public function register(): void
+    {
+        $this->renderable(function (Throwable $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'error'   => true,
+                    'message' => $e->getMessage(),
+                    'file'    => config('app.debug') ? $e->getFile() : null,
+                    'line'    => config('app.debug') ? $e->getLine() : null,
+                ], 500);
+            }
+        });
+    }
 
     /**
      * Retorno padrão para requisições não autenticadas (API)
